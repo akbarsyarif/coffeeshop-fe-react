@@ -1,11 +1,31 @@
-import React from "react";
+import React, { useEffect } from "react";
 import getImageUrl from "../utils/imageGetter";
 import Header from "../components/HeaderUser";
 import Footer from "../components/Footer";
 // import { useNavigate } from "react-router-dom"; gunakan ketika ada logika sebelum navigasi
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useUserContext } from "../contexts/userContext";
+import { axiosGetUserInfo } from "../https/user";
 
 function profile() {
+  const { user } = useUserContext();
+  const isUser = user.isUserAvailable;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    async function fetchData() {
+      if (!isUser) return navigate("/login");
+      const query = user.userInfo;
+      try {
+        const result = await axiosGetUserInfo(query);
+        console.log(result);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+    fetchData();
+  }, []);
+
   return (
     <>
       <Header></Header>

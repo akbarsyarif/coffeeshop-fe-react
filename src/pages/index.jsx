@@ -1,10 +1,20 @@
-import React from "react";
+import { useState } from "react";
 import getImageUrl from "../utils/imageGetter";
 import Footer from "../components/Footer";
 // import { useNavigate } from "react-router-dom"; gunakan ketika ada logika sebelum navigasi
 import { Link } from "react-router-dom";
 
 function index() {
+  const [navShown, setNavShown] = useState(false);
+
+  const navIcon = () => {
+    if (navShown) return "XCircle";
+    return "hamburger-menu";
+  };
+
+  const showNavHandler = () => {
+    setNavShown((state) => !state);
+  };
   return (
     <>
       <header className="absolute w-[100%] z-[1] flex py-[2vh] px-[15px] items-center bg-[#0b0909]/[0.13] justify-between md:py-[2vh] md:px-[3vw] xl:px-[9vw]">
@@ -20,16 +30,39 @@ function index() {
             </Link>
           </nav>
         </section>
-        <img className="hamburger cursor-pointer md:hidden select-none" id="hamburger-menu" src={getImageUrl("hamburger-menu", "svg")} alt="hamburger" onclick="toggleNavBar(); return false" />
+        <img className="hamburger w-[30px] h-[30px] cursor-pointer md:hidden select-none" id="hamburger-menu" src={getImageUrl(navIcon(), "svg")} alt="hamburger" onClick={showNavHandler} />
+        <div className={" nav-down absolute top-[65px] right-[0px] w-screen h-screen p-5 bg-black flex flex-col gap-3 items-center md:hidden " + (navShown ? "true" : "hidden")}>
+          <input type="text" placeholder="Search" className="w-full text-white p-3 pl-10 rounded-md mb-4 bg-[#aeaeae] bg-[url(./assets/images/Search.svg)] bg-no-repeat bg-[center_left_10px] placeholder:text-white" />
+          <p className="active text-color-1 text-xl select-none cursor-pointer mb-4">Home</p>
+          <Link to="/product">
+            <p className="text-white text-xl select-none cursor-pointer mb-4">Product</p>
+          </Link>
+          <Link to="/checkout" className="flex gap-[15px] items-center mb-4">
+            <img className="w-[24px] h-[24px] max-w-none" src={getImageUrl("ShoppingCart -white", "svg")} alt="shopping-cart" />
+            <p className="your-cart text-white text-xl select-none cursor-pointer">Your Cart</p>
+          </Link>
+          <Link to="/login" className="w-full">
+            <button type="button" className=" text-xl text-white bg-transparent border border-white hover:bg-white/50 px-2 md:px-[18px] py-2 md:py-[12px] rounded-md w-[100%] hover:bg-color-1-hover">
+              Sign In
+            </button>
+          </Link>
+          <Link to="/register" className="w-full">
+            <button type="button" className=" text-xl text-color-2 bg-color-1 border border-transparent px-2 md:px-[18px] py-2 md:py-[12px] rounded-md w-full hover:bg-color-1-hover">
+              Sign Up
+            </button>
+          </Link>
+        </div>
         <nav className="right-nav hidden md:flex md:items-center md:gap-[22px]">
           <img className="w-[24px] h-[24px]" src={getImageUrl("Search", "svg")} alt="search" />
-          <img className="w-[24px] h-[24px]" src={getImageUrl("ShoppingCart -white", "svg")} alt="shopping-cart" />
+          <Link to="/checkout">
+            <img className="w-[24px] h-[24px] max-w-none" src={getImageUrl("ShoppingCart -white", "svg")} alt="shopping-cart" />
+          </Link>
           <Link to="/login" className="w-full">
             <button type="button" className="whitespace-nowrap text-sm text-white bg-transparent border border-white hover:bg-white/50 px-2 md:px-[18px] py-2 md:py-[12px] rounded-md w-[100%] hover:bg-color-1-hover">
               Sign In
             </button>
           </Link>
-          <Link to="./register">
+          <Link to="/register">
             <button type="button" className="text-sm text-color-2 bg-color-1 border border-transparent px-2 md:px-[18px] py-2 md:py-[12px] rounded-md w-[100%] hover:bg-color-1-hover whitespace-nowrap">
               Sign Up
             </button>

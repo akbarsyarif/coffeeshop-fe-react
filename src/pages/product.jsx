@@ -3,15 +3,54 @@ import getImageUrl from "../utils/imageGetter";
 import Header from "../components/HeaderUser";
 import Footer from "../components/Footer";
 // import { useNavigate } from "react-router-dom"; gunakan ketika ada logika sebelum navigasi
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+
+const FilterRadio = ({ category, onChangeHandler }) => (
+  <>
+    <input type="radio" name="filter" id={category} className="hidden" onChange={onChangeHandler} />
+    <label htmlFor={category} className="filter-button cursor-pointer">
+      {category}
+    </label>
+  </>
+);
 
 function product() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  console.log(searchParams.get("search"));
+  // const filterList = ["Favorite Product", "Coffee", "Non Coffee", "Foods", "Add-On"];
+  // const sortList = [];
+
+  const searchHandler = (e) => {
+    e.preventDefault();
+    let category = "";
+    for (let i = 0; i < e.target.filter.length; i++) {
+      if (e.target.filter[i].checked) {
+        category = e.target.filter[i].id;
+      }
+    }
+
+    setSearchParams((prev) => ({
+      ...prev,
+      search: e.target["search-bar"].value,
+      category: category,
+    }));
+    console.log(e.target.filter);
+    console.log(e.target["search-bar"]);
+  };
+
+  // const filterHandler = (e) => {
+  //   setFilterParams((prev) => ({
+  //     ...prev,
+  //     category: e.target.id,
+  //   }));
+  // };
+
   return (
     <>
       <Header></Header>
       <main className="">
         <section className="hero py-4 md:py-[2vh] lg:py-[5vh] px-[15px] md:px-[3vw] xl:px-[9vw] xl:py-[8vh] md:h-[30vh] bg-[url(./assets/images/product-hero.webp)] bg-cover bg-no-repeat mb-[4vh] bg-[right_-210px_center] md:bg-center">
-          <h1 className="hero-text text-center md:text-start text-white text-[48px] font-medium md:w-[80%] 2xl:w-[55%]">We Provide Good Coffee and Healthy Meals</h1>
+          <h1 className="hero-text text-center lg:text-start mx-auto lg:mx-0 text-white text-[48px] font-medium md:w-[80%] 2xl:w-[55%]">We Provide Good Coffee and Healthy Meals</h1>
         </section>
 
         <section className="promo py-4 select-none">
@@ -28,7 +67,7 @@ function product() {
             <section className="card pt-[11px] pr-[20px] pl-[15px] min-w-[335px] max-w-[335px] bg-[#88b788] rounded-[20px] flex gap-[9px]">
               <img className="w-[82px] h-[106px] mb-[-5px]" src={getImageUrl("promo-1", "webp")} alt="promo-1" />
               <section className="card-text flex flex-col text-sm font-bold text-black whitespace-pre-line">
-                <p className="card-name">Happy Mother's Day!</p>
+                <p className="card-name font-bold">Happy Mother's Day!</p>
                 <p className="card-desc font-normal mb-[10px]">Get one of our favorite menu for free</p>
                 <p className="claim font-medium text-white">Klaim Kupon</p>
               </section>
@@ -36,7 +75,7 @@ function product() {
             <section className="card pt-[11px] pr-[20px] pl-[15px] min-w-[335px] max-w-[335px] bg-[#88b788] rounded-[20px] flex gap-[9px]">
               <img className="w-[82px] h-[106px] mb-[-5px]" src={getImageUrl("promo-1", "webp")} alt="promo-1" />
               <section className="card-text flex flex-col text-sm font-bold text-black whitespace-pre-line">
-                <p className="card-name">Happy Mother's Day!</p>
+                <p className="card-name font-bold">Happy Mother's Day!</p>
                 <p className="card-desc font-normal mb-[10px]">Get one of our favorite menu for free</p>
                 <p className="claim font-medium text-white">Klaim Kupon</p>
               </section>
@@ -44,7 +83,7 @@ function product() {
             <section className="card pt-[11px] pr-[20px] pl-[15px] min-w-[335px] max-w-[335px] bg-[#88b788] rounded-[20px] flex gap-[9px]">
               <img className="w-[82px] h-[106px] mb-[-5px]" src={getImageUrl("promo-1", "webp")} alt="promo-1" />
               <section className="card-text flex flex-col text-sm font-bold text-black whitespace-pre-line">
-                <p className="card-name">Happy Mother's Day!</p>
+                <p className="card-name font-bold">Happy Mother's Day!</p>
                 <p className="card-desc font-normal mb-[10px]">Get one of our favorite menu for free</p>
                 <p className="claim font-medium text-white">Klaim Kupon</p>
               </section>
@@ -52,7 +91,7 @@ function product() {
             <section className="card pt-[11px] pr-[20px] pl-[15px] min-w-[335px] max-w-[335px] bg-[#f5c361] rounded-[20px] flex gap-[9px]">
               <img className="w-[95px] h-[106px] mb-[-5px]" src={getImageUrl("promo-2", "webp")} alt="promo-2" />
               <section className="card-text flex flex-col justify-center text-sm font-bold whitespace-pre-line text-black">
-                <p className="card-name mb-[11px]">Get a cup of coffee for free on sunday morning</p>
+                <p className="card-name font-bold mb-[11px]">Get a cup of coffee for free on sunday morning</p>
                 <p className="card-desc font-normal">Only at 7 to 9 AM</p>
                 {/* <!-- <p className="claim">Klaim Kupon</p> --> */}
               </section>
@@ -81,75 +120,103 @@ function product() {
                 <p className="text-[22px] font-semibold">Filter</p>
                 <p className="reset-filter font-bold">Reset Filter</p>
               </section>
-              <label htmlFor="search-bar" className="filter-head font-bold">
-                Search
-              </label>
-              <input
-                type="text"
-                id="search-bar"
-                placeholder="Search Your Product"
-                className="search-bar w-[100%] mt-[-6px] pt-[22px] pr-[55px] pb-[25px] pl-[20px] border border-[#dedede] bg-[#fcfdfe] rounded-md text-[#696f79] text-sm font-normal tracking-[.75px]"
-              />
-              <p className="filter-head font-bold">Category</p>
-              <section className="checkbox flex gap-[15px]">
-                <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                <p className="filter-list">Favorite Product</p>
-              </section>
-              <section className="checkbox flex gap-[15px]">
-                <div className="checked w-[24px] h-[24px] bg-color-1 bg-[url(./assets/images/u_check.svg)] rounded-md"></div>
-                <p className="filter-list">Coffee</p>
-              </section>
-              <section className="checkbox flex gap-[15px]">
-                <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                <p className="filter-list">Non Coffee</p>
-              </section>
-              <section className="checkbox flex gap-[15px]">
-                <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                <p className="filter-list">Foods</p>
-              </section>
-              <section className="checkbox flex gap-[15px]">
-                <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                <p className="filter-list">Add-On</p>
-              </section>
-              {/* <!--  --> */}
-              <p className="filter-head font-bold">Sort By</p>
-              <section className="checkbox flex gap-[15px]">
-                <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                <p className="filter-list">Buy 1 get 1</p>
-              </section>
-              <section className="checkbox flex gap-[15px]">
-                <div className="checked w-[24px] h-[24px] bg-color-1 bg-[url(./assets/images/u_check.svg)] rounded-md"></div>
-                <p className="filter-list">Flash Sale</p>
-              </section>
-              <section className="checkbox flex gap-[15px]">
-                <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                <p className="filter-list">Birthday Package</p>
-              </section>
-              <section className="checkbox flex gap-[15px]">
-                <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                <p className="filter-list">Cheap</p>
-              </section>
-              <p className="filter-head font-bold">Range Price</p>
-              <section className="range">
-                <div className="range-slider h-[8px] relative bg-[#f5f6f8] rounded-[25px]">
-                  <span className="range-selected h-[100%] absolute left-[20%] right-[30%] rounded-[25px] bg-color-1"></span>
-                </div>
-                <section className="slider relative">
-                  <input className="min absolute w-[100%] h-[5px] top-[-7px] bg-none appearance-none pointer-events-none" min="330" max="580" type="range" defaultValue="374" />
-                  <input className="max absolute w-[100%] h-[5px] top-[-7px] bg-none appearance-none pointer-events-none" min="330" max="580" type="range" defaultValue="500" />
+              <form className="flex flex-col gap-[16px]" onSubmit={searchHandler}>
+                <label htmlFor="search-bar" className="filter-head font-bold">
+                  Search
+                </label>
+                <input
+                  type="text"
+                  id="search-bar"
+                  placeholder="Search Your Product"
+                  className="search-bar w-[100%] mt-[-6px] pt-[22px] pr-[55px] pb-[25px] pl-[20px] border border-[#dedede] bg-[#fcfdfe] rounded-md text-[#696f79] text-sm font-normal tracking-[.75px]"
+                />
+                <p className="filter-head font-bold">Category</p>
+                {/* {filterList.map(
+                  (category,
+                  (idx) => {
+                    return <FilterRadio key={idx} category={category} onChangeHandler={filterHandler}></FilterRadio>;
+                  })
+                )} */}
+                <input type="radio" name="filter" id="favorite-product" className="hidden" />
+                <label htmlFor="favorite-product" className="filter-button cursor-pointer">
+                  Favorite Product
+                </label>
+                <input type="radio" name="filter" id="coffee" className="hidden" />
+                <label htmlFor="coffee" className="filter-button cursor-pointer">
+                  Coffee
+                </label>
+                <input type="radio" name="filter" id="non-coffee" className="hidden" />
+                <label htmlFor="non-coffee" className="filter-button cursor-pointer">
+                  Non Coffee
+                </label>
+                <input type="radio" name="filter" id="foods" className="hidden" />
+                <label htmlFor="foods" className="filter-button cursor-pointer">
+                  Foods
+                </label>
+                <input type="radio" name="filter" id="add-on" className="hidden" />
+                <label htmlFor="add-on" className="filter-button cursor-pointer">
+                  Add-On
+                </label>
+                {/* <section className="checkbox flex gap-[15px]">
+                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
+                  <p className="filter-list">Favorite Product</p>
                 </section>
-                <div className="range-price flex justify-evenly mt-[8px] text-xs leading-[24px]">
-                  <p>
-                    Idr.<span className="min">374</span>
-                  </p>
-                  <p>
-                    Idr.<span className="max">500</span>
-                  </p>
-                </div>
-              </section>
-              <button type="button " className="cursor-pointer [-8px] py-[12px] px-[18px] bg-color-1 hover:bg-color-1-hover rounded text-[#0b0909] text-sm font-medium tracking-[.75px]">
-                Apply Filter
-              </button>
+                <section className="checkbox flex gap-[15px]">
+                  <div className="checked w-[24px] h-[24px] bg-color-1 bg-[url(./assets/images/u_check.svg)] rounded-md"></div>
+                  <p className="filter-list">Coffee</p>
+                </section>
+                <section className="checkbox flex gap-[15px]">
+                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
+                  <p className="filter-list">Non Coffee</p>
+                </section>
+                <section className="checkbox flex gap-[15px]">
+                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
+                  <p className="filter-list">Foods</p>
+                </section>
+                <section className="checkbox flex gap-[15px]">
+                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
+                  <p className="filter-list">Add-On</p>
+                </section> */}
+                {/* <!--  --> */}
+                <p className="filter-head font-bold">Sort By</p>
+                <section className="checkbox flex gap-[15px]">
+                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
+                  <p className="filter-list">Buy 1 get 1</p>
+                </section>
+                <section className="checkbox flex gap-[15px]">
+                  <div className="checked w-[24px] h-[24px] bg-color-1 bg-[url(./assets/images/u_check.svg)] rounded-md"></div>
+                  <p className="filter-list">Flash Sale</p>
+                </section>
+                <section className="checkbox flex gap-[15px]">
+                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
+                  <p className="filter-list">Birthday Package</p>
+                </section>
+                <section className="checkbox flex gap-[15px]">
+                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
+                  <p className="filter-list">Cheap</p>
+                </section>
+                <p className="filter-head font-bold">Range Price</p>
+                <section className="range">
+                  <div className="range-slider h-[8px] relative bg-[#f5f6f8] rounded-[25px]">
+                    <span className="range-selected h-[100%] absolute left-[20%] right-[30%] rounded-[25px] bg-color-1"></span>
+                  </div>
+                  <section className="slider relative">
+                    <input className="min absolute w-[100%] h-[5px] top-[-7px] bg-none appearance-none pointer-events-none" min="330" max="580" type="range" defaultValue="374" />
+                    <input className="max absolute w-[100%] h-[5px] top-[-7px] bg-none appearance-none pointer-events-none" min="330" max="580" type="range" defaultValue="500" />
+                  </section>
+                  <div className="range-price flex justify-evenly mt-[8px] text-xs leading-[24px]">
+                    <p>
+                      Idr.<span className="min">374</span>
+                    </p>
+                    <p>
+                      Idr.<span className="max">500</span>
+                    </p>
+                  </div>
+                </section>
+                <button type="button " className="cursor-pointer [-8px] py-[12px] px-[18px] bg-color-1 hover:bg-color-1-hover rounded text-[#0b0909] text-sm font-medium tracking-[.75px]">
+                  Apply Filter
+                </button>
+              </form>
             </section>
             <section className="product-list grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 items-center gap-[20px]">
               <section className="product-info">
