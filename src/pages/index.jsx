@@ -4,7 +4,7 @@ import Footer from "../components/Footer";
 // import { useNavigate } from "react-router-dom"; gunakan ketika ada logika sebelum navigasi
 import { Link } from "react-router-dom";
 
-function index() {
+function Index() {
   const [navShown, setNavShown] = useState(false);
 
   const navIcon = () => {
@@ -227,4 +227,4 @@ function index() {
   );
 }
 
-export default index;
+export default Index;

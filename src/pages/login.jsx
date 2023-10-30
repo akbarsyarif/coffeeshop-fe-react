@@ -1,40 +1,42 @@
 import { React, useState } from "react";
 import getImageUrl from "../utils/imageGetter";
 import { Link, useNavigate } from "react-router-dom";
-import { axiosLogin } from "../https/auth";
-import { useUserContext } from "../contexts/userContext";
+// import { axiosLogin } from "../https/auth";
+// import { useUserContext } from "../contexts/userContext";
+import { useSelector, useDispatch } from "react-redux";
+import { userAction } from "../redux/slices/user";
 
-function login() {
-  const [errorMessage, setErrorMessage] = useState("");
-  const { changeUser } = useUserContext();
-
+function Login() {
+  const user = useSelector((state) => state.user);
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const submitHandler = async (e) => {
+  const submitHandler = (e) => {
     e.preventDefault();
     const body = {
       email: e.target.email.value,
       password: e.target.password.value,
     };
-    // const errorMessage = a;
-    // console.log(body);
-    try {
-      const result = await axiosLogin(body);
-      console.log(result);
-      changeUser({
-        isUserAvailable: true,
-        userInfo: result.data.userInfo,
-      });
-      // console.log(axiosLogin(body));
-      // console.log(result.data.token);
-      return navigate("/product");
-    } catch (error) {
-      console.log(error);
-      if (error.response.data.msg === "email and password cannot empty") return setErrorMessage("Email Dan Password Harus Diisi");
-      if (error.response.status === 404) return setErrorMessage("Email Belum Terdaftar");
-      if (error.response.status === 400) return setErrorMessage("Email Atau Password Salah");
-      if (error.response.status === 401) return setErrorMessage("Verify Email Anda Terlebih Dahulu");
-    }
+
+    const { loginThunk } = userAction;
+    dispatch(loginThunk(body));
+    // console.log(user.isFulfilled);
+    if (user.isFulfilled) return navigate("/product");
+
+    // const result = await axiosLogin(body);
+    // console.log(result);
+    // changeUser({
+    //   isUserAvailable: true,
+    //   userInfo: result.data.userInfo,
+    // });
+    // localStorage.setItem("token", result.data.token);
+    // } catch (error) {
+    //   console.log(error);
+    //   if (error.response.data.msg === "email and password cannot empty") return setErrorMessage("Email Dan Password Harus Diisi");
+    //   if (error.response.status === 404) return setErrorMessage("Email Belum Terdaftar");
+    //   if (error.response.status === 400) return setErrorMessage("Email Atau Password Salah");
+    //   if (error.response.status === 401) return setErrorMessage("Verify Email Anda Terlebih Dahulu");
+    // }
   };
 
   return (
@@ -79,8 +81,9 @@ function login() {
                   <span className="login-link text-color-1 hover:text-color-1-hover">Lupa Password?</span>
                 </Link>
               </div>
-              <p className={"error-message text-center font-bold text-[#ff0000] xl:mt-[-49px] " + (errorMessage === "" ? "hidden" : "")}>{errorMessage}</p>
-              <button type="submit" className="register h-[50px] text-color-2 font-semibold bg-color-1 hover:bg-color-1-hover cursor-pointer rounded-[10px]">
+              {user.isRejected && user.error && <p className="error-message text-center font-bold text-[#ff0000] xl:mt-[-49px] ">{user.error.message}</p>}
+              {/* <p className={"error-message text-center font-bold text-[#ff0000] xl:mt-[-49px] " + (errorMessage === "" ? "hidden" : "")}>{errorMessage}</p> */}
+              <button type="submit" className={`login h-[50px] text-color-2 font-semibold bg-color-1 hover:bg-color-1-hover ${user.isPending ? "cursor-progress" : "cursor-pointer"}  rounded-[10px]`}>
                 Login
               </button>
             </form>
@@ -115,4 +118,4 @@ function login() {
   );
 }
 
-export default login;
+export default Login;

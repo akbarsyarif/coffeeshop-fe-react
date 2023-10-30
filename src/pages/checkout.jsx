@@ -1,42 +1,90 @@
-import React from "react";
+import { useState } from "react";
 import getImageUrl from "../utils/imageGetter";
 import Header from "../components/HeaderUser";
 import Footer from "../components/Footer";
+import ProductList from "../components/CheckoutProduct";
 // import { useNavigate } from "react-router-dom"; gunakan ketika ada logika sebelum navigasi
 import { Link } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { axiosCreateOrder } from "../https/order";
+import { checkOut } from "../redux/slices/userCart";
 
-function checkout() {
+function Checkout() {
+  const [checkoutModal, setCheckoutModal] = useState(false);
+  const user = useSelector((state) => state.user);
+  const userCart = useSelector((state) => state.userCart);
+  const dispatch = useDispatch();
+
+  const doNothing = () => {};
+
+  const modalHandler = () => {
+    setCheckoutModal((state) => !state);
+  };
+
+  const sumOrder = () => {
+    let priceCont = [];
+    let sum = 0;
+    for (let i = 0; i < userCart.product.length; i++) {
+      priceCont.push(userCart.product[i][4]);
+    }
+    for (let j = 0; j < priceCont.length; j++) {
+      sum += priceCont[j];
+    }
+    return sum;
+  };
+
+  const checkOutOrder = async () => {
+    const body = {
+      status_id: 1,
+      total: sumOrder(),
+      shipping_id: 1,
+      product: userCart.product,
+    };
+    console.log(body);
+    const path = user.userInfo.id;
+    const jwt = user.token;
+    try {
+      await axiosCreateOrder(body, jwt, path);
+      dispatch({
+        type: checkOut,
+      });
+      setCheckoutModal(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   return (
     <>
       <Header></Header>
       <main className="py-4 md:py-[5vh] px-[15px] md:items-start md:px-[3vw] xl:px-[9vw] xl:py-[8vh]">
         {/* <!-- modal fflex --> */}
-        <section className="modal h-screen w-full fixed left-0 top-0 justify-center items-center bg-black/75 hidden">
+        <section className={"modal h-screen w-full fixed left-0 top-0 flex justify-center items-center bg-black/75 z-[2] " + (checkoutModal ? "" : "hidden")}>
           <div className="modal-cont border-2 border-color-1 bg-white rounded shadow-lg w-[95%] lg:w-2/3 p-[15px] md:p-10 flex flex-col justify-between gap-[20px]">
             <p className="modal-text text-3xl md:text-4xl font-medium">This is your order:</p>
             <div className="flex justify-between">
               <p className="order text-[#4f5665] text-lg font-bold">Order</p>
-              <p className="order-total text-color-2 text-lg font-bold">Idr. 40.000</p>
+              <p className="order-total text-color-2 text-lg font-bold">{`IDR. ${sumOrder()}`}</p>
             </div>
             <div className="flex justify-between">
               <p className="deliv text-[#4f5665] text-lg font-bold">Delivery</p>
-              <p className="deliv-total text-color-2 text-lg font-bold">Idr. 0</p>
+              <p className="deliv-total text-color-2 text-lg font-bold">IDR. 0</p>
             </div>
             <div className="flex justify-between">
               <p className="tax text-[#4f5665] text-lg font-bold">Tax</p>
-              <p className="tax-total text-color-2 text-lg font-bold">Idr. 4.000</p>
+              <p className="tax-total text-color-2 text-lg font-bold">IDR. 0</p>
             </div>
             <div className="dashed border-b border-[#e8e8e8]"></div>
             <div className="flex justify-between">
               <p className="sub text-[#4f5665] text-lg font-bold">Sub Total</p>
-              <p className="sub-total text-color-2 text-lg font-bold">Idr. 44.000</p>
+              <p className="sub-total text-color-2 text-lg font-bold">{`IDR. ${sumOrder()}`}</p>
             </div>
             <div className="flex flex-col mt-[20px] lg:mt-[40px] gap-[10px] lg:gap-[30px] xl:gap-[60px] w-full md:flex-row">
-              <button type="button" className="close-modal bg-color-1 rounded-md w-full p-[10px] hover:bg-color-1-hover text-lg font-medium">
-                Yes
-              </button>
-              <button type="button" className="close-modal bg-[#d00000] rounded-md w-full p-[10px] hover:bg-color-1-hover text-white text-lg font-medium">
+              <button type="button" className="close-modal bg-[#d00000] rounded-md w-full p-[10px] hover:bg-color-1-hover text-white text-lg font-medium" onClick={modalHandler}>
                 Cancel
+              </button>
+              <button type="button" className="close-modal bg-color-1 rounded-md w-full p-[10px] hover:bg-color-1-hover text-lg font-medium" onClick={checkOutOrder}>
+                Confirm
               </button>
             </div>
           </div>
@@ -51,35 +99,13 @@ function checkout() {
 
                 <div className="cursor-pointer select-none flex gap-[10px] items-center bg-color-1 hover:bg-color-1-hover p-[10px] rounded-md">
                   <img src={getImageUrl("plus", "svg")} alt="plus" />
-                  <p className="text-color-2 text-sm font-medium">Add Menu</p>
+                  <Link to="/product">
+                    <p className="text-color-2 text-sm font-medium">Add Menu</p>
+                  </Link>
                 </div>
               </div>
-              <section className="product-cont flex flex-col items-center md:flex-row gap-[15px] md:gap-[28px] mb-[11px] p-[10px] bg-[#e8e8e8]/[0.3]">
-                <img className="lg:w-[178px]" src={getImageUrl("product-4", "webp")} alt="product-image" />
-                <div className="product-text flex flex-col w-[100%] items-start gap-[15px]">
-                  <p className="flash w-fit bg-[#d00000] p-[10px] rounded-3xl text-white text-xs font-bold">FLASH SALE!</p>
-                  <p className="product-name text-[#0b0909] text-lg font-bold">Hazelnut Latte</p>
-                  <p className="product-desc text-[#4f5665] text-lg self-stretch">2pcs | Regular | Ice | Dine In</p>
-                  <div className="price flex gap-[12px] items-center">
-                    <p className="actual-price text-[#d00000] text-xs font-medium line-through">IDR 40.000</p>
-                    <p className="discount-price text-color-1 text-[22px] font-medium">IDR 20.000</p>
-                  </div>
-                </div>
-                <img className="w-[24px] h-[24px] hover:cursor-pointer md:mr-[50px] lg:mr-[10px] xl:mr-[50px]" src={getImageUrl("XCircle", "svg")} alt="x-circle" />
-              </section>
-              <section className="product-cont flex flex-col items-center md:flex-row gap-[15px] md:gap-[28px] mb-[11px] p-[10px] bg-[#e8e8e8]/[0.3]">
-                <img className="lg:w-[178px]" src={getImageUrl("product-4", "webp")} alt="product-image" />
-                <div className="product-text flex flex-col w-[100%] items-start gap-[15px]">
-                  <p className="flash w-fit bg-[#d00000] p-[10px] rounded-3xl text-white text-xs font-bold">FLASH SALE!</p>
-                  <p className="product-name text-[#0b0909] text-lg font-bold">Hazelnut Latte</p>
-                  <p className="product-desc text-[#4f5665] text-lg self-stretch">2pcs | Regular | Ice | Dine In</p>
-                  <div className="price flex gap-[12px] items-center">
-                    <p className="actual-price text-[#d00000] text-xs font-medium line-through">IDR 40.000</p>
-                    <p className="discount-price text-color-1 text-[22px] font-medium">IDR 20.000</p>
-                  </div>
-                </div>
-                <img className="w-[24px] h-[24px] hover:cursor-pointer md:mr-[50px] lg:mr-[10px] xl:mr-[50px]" src={getImageUrl("XCircle", "svg")} alt="x-circle" />
-              </section>
+              {userCart.productInfo.length > 0 ? userCart.productInfo.map((product, idx) => <ProductList key={idx} info={product}></ProductList>) : <p className="text-center my-10 text-2xl"> No Product Found</p>}
+              {/* {productData ? productData.map((product, idx) => <ProductCards key={idx} info={product}></ProductCards>) : <p> No Product Found</p>} */}
             </section>
             <section className="bottom">
               <p className="info mb-[39px] text-color-2 text-[22px] font-medium">Payment Info & Delivery</p>
@@ -92,6 +118,7 @@ function checkout() {
                   name=""
                   id="email"
                   placeholder="Enter Your Email"
+                  defaultValue={user.userInfo.email}
                   className="email py-[14px] px-[13px] pl-[38px] text-xs bg-[#fcfdfe] border border-[#dedede] rounded-lg bg-[url('./assets/images/mail-logo.svg')] bg-no-repeat bg-[left_13px_top_50%]"
                 />
                 <label htmlFor="full-name" className="text-color-2 font-semibold">
@@ -102,6 +129,7 @@ function checkout() {
                   name=""
                   id="full-name"
                   placeholder="Enter Your Full Name"
+                  defaultValue={user.userInfo.full_name}
                   className="full-name py-[14px] px-[13px] pl-[38px] text-xs bg-[#fcfdfe] border border-[#dedede] rounded-lg bg-[url('./assets/images/profile.svg')] bg-[length:16px_16px] bg-no-repeat bg-[left_13px_top_50%]"
                 />
                 <label htmlFor="address" className="text-color-2 font-semibold">
@@ -128,22 +156,24 @@ function checkout() {
             <section className="payment-info-cont flex flex-col gap-[19px] p-[20px] bg-[#e8e8e8]/[0.3]">
               <div className="flex justify-between">
                 <p className="order text-[#4f5665] text-lg font-bold">Order</p>
-                <p className="order-total text-color-2 text-lg font-bold">Idr. 40.000</p>
+                <p className="order-total text-color-2 text-lg font-bold">{`IDR. ${sumOrder()}`}</p>
               </div>
               <div className="flex justify-between">
                 <p className="deliv text-[#4f5665] text-lg font-bold">Delivery</p>
-                <p className="deliv-total text-color-2 text-lg font-bold">Idr. 0</p>
+                <p className="deliv-total text-color-2 text-lg font-bold">IDR. 0</p>
               </div>
               <div className="flex justify-between">
                 <p className="tax text-[#4f5665] text-lg font-bold">Tax</p>
-                <p className="tax-total text-color-2 text-lg font-bold">Idr. 4.000</p>
+                <p className="tax-total text-color-2 text-lg font-bold">IDR. 0</p>
               </div>
               <div className="dashed border-b border-[#e8e8e8]"></div>
               <div className="flex justify-between">
                 <p className="sub text-[#4f5665] text-lg font-bold">Sub Total</p>
-                <p className="sub-total text-color-2 text-lg font-bold">Idr. 44.000</p>
+                <p className="sub-total text-color-2 text-lg font-bold">{`IDR. ${sumOrder()}`}</p>
               </div>
-              <button className="select-none cursor-pointer bg-color-1 rounded-md p-[10px] text-color-2 text-sm font-medium hover:bg-color-1-hover show-modal">Checkout</button>
+              <button className="select-none cursor-pointer bg-color-1 rounded-md p-[10px] text-color-2 text-sm font-medium hover:bg-color-1-hover show-modal" onClick={sumOrder() ? modalHandler : doNothing}>
+                Checkout
+              </button>
               <p className="text-[#4f5665]">We Accept</p>
               <div className="accept flex justify-between">
                 <img src={getImageUrl("bri-logo", "svg")} alt="bank-bri" />
@@ -163,4 +193,4 @@ function checkout() {
   );
 }
 
-export default checkout;
+export default Checkout;

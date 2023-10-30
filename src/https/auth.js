@@ -12,6 +12,10 @@ export const axiosRegister = (body) => {
   return axios.post(registerUrl, body);
 };
 
-export const axiosLogout = (body) => {
-  return axios.delete(baseUrl, { data: body });
+export const axiosLogout = (jwt) => {
+  return axios.delete(baseUrl, {
+    headers: {
+      Authorization: "Bearer " + jwt,
+    },
+  });
 };

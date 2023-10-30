@@ -1,17 +1,75 @@
-import React from "react";
+import { useEffect, useState } from "react";
 import getImageUrl from "../utils/imageGetter";
+import OrderDetailList from "../components/OrderDetailList";
 import Header from "../components/HeaderUser";
 import Footer from "../components/Footer";
+import { axiosGetUserInfo } from "../https/user";
+import { axiosGetUserOrderDetail } from "../https/order";
+import { useSelector } from "react-redux";
+import moment from "moment";
 
 function OrderDetail() {
+  const user = useSelector((state) => state.user);
+  const productId = useSelector((state) => state.userHistory.productId);
+  const [userAxios, setUserAxios] = useState();
+  const [orderAxios, setOrderAxios] = useState();
+  const [orderDate, setOrderDate] = useState();
+  const isUser = user.isUserAvailable;
+
+  useEffect(() => {
+    async function fetchData() {
+      if (!isUser) return navigate("/login");
+      const userPath = user.userInfo.id;
+      const orderPath = productId;
+      const jwt = user.token;
+
+      try {
+        const userResult = await axiosGetUserInfo(userPath, jwt);
+        const orderResult = await axiosGetUserOrderDetail(jwt, orderPath);
+
+        setUserAxios(userResult.data.result[0]);
+        setOrderAxios(orderResult.data.result);
+      } catch (error) {
+        console.log(error);
+        if (error.response.data.msg === "Please Login Again") navigate("/login");
+      }
+    }
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    let rawDate;
+    let rawTime;
+    let formatedDate;
+
+    if (orderAxios) {
+      rawDate = moment(orderAxios[0].Date).format("D MMMM YYYY");
+      rawTime = ` at ${moment(orderAxios[0].Date).format("h:mm a")}`;
+      formatedDate = rawDate + rawTime;
+    }
+    setOrderDate(formatedDate);
+  }, [orderAxios]);
+
+  const sumOrder = () => {
+    let priceCont = [];
+    let sum = 0;
+    for (let i = 0; i < orderAxios.length; i++) {
+      priceCont.push(orderAxios[i]["Sub Total"]);
+    }
+    for (let k = 0; k < priceCont.length; k++) {
+      sum += priceCont[k];
+    }
+    return sum;
+  };
+
   return (
     <>
       <Header></Header>
       <main className="py-4 md:py-[5vh] px-[15px] md:items-start md:px-[3vw] xl:px-[9vw] xl:py-[8vh]">
         <h1 className="text-center md:text-start text-[0b0909] text-[40px] md:text-[48px] font-medium ">
-          Order <span className=" font-bold"> #12354-09893</span>
+          Order <span className=" font-bold">{orderAxios ? `#${orderAxios[0]["Order No."]}` : "Not Found"}</span>
         </h1>
-        <p className="text-[#4f5665] mb-[30px] md:mb-[27px] text-center md:text-start">21 March 2023 at 10:30 AM</p>
+        <p className="text-[#4f5665] mb-[30px] md:mb-[27px] text-center md:text-start">{orderAxios ? orderDate : ""}</p>
         <section className="lg:flex gap-[20px]">
           <section className="left mb-[50px] lg:flex-1">
             <section className="top mb-[39px]">
@@ -24,7 +82,7 @@ function OrderDetail() {
                       <img src={getImageUrl("Profile", "svg")} alt="profileimg" />
                       <p className="text-[#4f5665] font-medium">Full Name</p>
                     </div>
-                    <p className=" text-color-2 font-bold">Ghaluh Wizard Anggoro</p>
+                    <p className=" text-color-2 font-bold">{userAxios ? userAxios.full_name : "-"}</p>
                   </div>
                 </div>
                 <div className="flex flex-col py-[20px] px-[10px] border-b border-[#e8e8e8]">
@@ -33,7 +91,7 @@ function OrderDetail() {
                       <img src={getImageUrl("Location", "svg")} alt="profileimg" />
                       <p className="text-[#4f5665] font-medium">Address</p>
                     </div>
-                    <p className=" text-color-2 font-bold">Griya Bandung Indah</p>
+                    <p className=" text-color-2 font-bold">{userAxios && userAxios.address ? userAxios.address : "-"}</p>
                   </div>
                 </div>
                 <div className="flex flex-col py-[20px] px-[10px] border-b border-[#e8e8e8]">
@@ -42,7 +100,7 @@ function OrderDetail() {
                       <img src={getImageUrl("PhoneCall", "svg")} alt="profileimg" />
                       <p className="text-[#4f5665] font-medium">Phone</p>
                     </div>
-                    <p className=" text-color-2 font-bold">082116304338</p>
+                    <p className=" text-color-2 font-bold">{userAxios && userAxios.phone_number ? userAxios.phone_number : "-"}</p>
                   </div>
                 </div>
                 <div className="flex flex-col py-[20px] px-[10px] border-b border-[#e8e8e8]">
@@ -60,7 +118,7 @@ function OrderDetail() {
                       <img src={getImageUrl("truck", "svg")} alt="profileimg" />
                       <p className="text-[#4f5665] font-medium">Shipping</p>
                     </div>
-                    <p className=" text-color-2 font-bold">Dine In</p>
+                    <p className=" text-color-2 font-bold">{orderAxios ? `${orderAxios[0].Shipping}` : "-"}</p>
                   </div>
                 </div>
                 <div className="flex flex-col py-[20px] px-[10px] border-b border-[#e8e8e8]">
@@ -69,7 +127,18 @@ function OrderDetail() {
                       <img src={getImageUrl("u_process", "svg")} alt="profileimg" />
                       <p className="text-[#4f5665] font-medium">Status</p>
                     </div>
-                    <p className=" text-[#00a700] text-xs font-bold p-[10px] bg-[#00a700]/[.20] rounded-3xl">Done</p>
+
+                    <p
+                      className={
+                        orderAxios
+                          ? orderAxios[0].Status === "Finished Order"
+                            ? "text-[#00A700] text-xs text-center font-bold bg-[#00A700]/[0.2] rounded-3xl px-[10px] py-[5px]"
+                            : "text-color-1 text-xs text-center font-bold bg-[#ff8906]/[0.2] rounded-3xl px-[10px] py-[5px]"
+                          : "-"
+                      }
+                    >
+                      {orderAxios ? (orderAxios[0].Status === "Finished Order" ? "Done" : orderAxios[0].Status) : "-"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex flex-col py-[20px] px-[10px]">
@@ -78,7 +147,7 @@ function OrderDetail() {
                       <img src={getImageUrl("Profile", "svg")} alt="profileimg" />
                       <p className="text-[#4f5665] font-medium">Total transaksi</p>
                     </div>
-                    <p className=" text-color-1 font-bold">Idr 40.000</p>
+                    <p className=" text-color-1 font-bold">{orderAxios ? `IDR. ${sumOrder()}` : "IDR. 0"}</p>
                   </div>
                 </div>
               </section>
@@ -86,30 +155,8 @@ function OrderDetail() {
           </section>
           <section className="right">
             <p className="text-color-2 text-[22px] font-medium mb-[21px] text-center md:text-start">Your Order</p>
-            <section className="product-cont flex flex-col items-center md:flex-row gap-[15px] md:gap-[28px] pr-8 xl:pr-24 2xl:pr-36 mb-[11px] p-[10px] bg-[#e8e8e8]/[0.3]">
-              <img className="lg:w-[178px]" src={getImageUrl("product-4", "webp")} alt="product-image" />
-              <div className="product-text flex flex-col w-[100%] items-start gap-[15px]">
-                <p className="flash w-fit bg-[#d00000] p-[10px] rounded-3xl text-white text-xs font-bold">FLASH SALE!</p>
-                <p className="product-name text-[#0b0909] text-lg font-bold">Hazelnut Latte</p>
-                <p className="product-desc text-[#4f5665] text-lg self-stretch">2pcs | Regular | Ice | Dine In</p>
-                <div className="price flex gap-[12px] items-center">
-                  <p className="actual-price text-[#d00000] text-xs font-medium line-through">IDR 40.000</p>
-                  <p className="discount-price text-color-1 text-[22px] font-medium">IDR 20.000</p>
-                </div>
-              </div>
-            </section>
-            <section className="product-cont flex flex-col items-center md:flex-row gap-[15px] md:gap-[28px] pr-8 xl:pr-24 2xl:pr-36 mb-[11px] p-[10px] bg-[#e8e8e8]/[0.3]">
-              <img className="lg:w-[178px]" src={getImageUrl("product-4", "webp")} alt="product-image" />
-              <div className="product-text flex flex-col w-[100%] items-start gap-[15px]">
-                <p className="flash w-fit bg-[#d00000] p-[10px] rounded-3xl text-white text-xs font-bold">FLASH SALE!</p>
-                <p className="product-name text-[#0b0909] text-lg font-bold">Hazelnut Latte</p>
-                <p className="product-desc text-[#4f5665] text-lg self-stretch text-center md:text-start">2pcs | Regular | Ice | Dine In</p>
-                <div className="price flex gap-[12px] items-center justify-center md:justify-start w-full">
-                  <p className="actual-price text-[#d00000] text-xs font-medium line-through">IDR 40.000</p>
-                  <p className="discount-price text-color-1 text-[22px] font-medium">IDR 20.000</p>
-                </div>
-              </div>
-            </section>
+            {/* <OrderDetailList></OrderDetailList> */}
+            {orderAxios && orderAxios.length > 0 ? orderAxios.map((product, idx) => <OrderDetailList key={idx} info={product}></OrderDetailList>) : <p className="mx-20 xl:mx-28 mt-11 text-xl md:text-4xl text-center">No Product Found</p>}
           </section>
         </section>
       </main>

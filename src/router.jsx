@@ -6,10 +6,13 @@ import Register from "./pages/register";
 import Product from "./pages/product";
 import Checkout from "./pages/checkout";
 import History from "./pages/history";
-import ProductDetail from "./pages/product-detail";
+import ProductDetail from "./pages/ProductDetail";
 import Profile from "./pages/profile";
 import ForgotPassword from "./pages/ForgotPassword";
 import OrderDetail from "./pages/OrderDetail";
+import Admin from "./pages/Admin";
+
+import TestRedux from "./pages/TestRedux";
 
 const router = createBrowserRouter([
   {
@@ -38,7 +41,7 @@ const router = createBrowserRouter([
     element: <History />,
   },
   {
-    path: "/product-detail",
+    path: "/product-detail/:productId",
     element: <ProductDetail />,
   },
   {
@@ -52,6 +55,14 @@ const router = createBrowserRouter([
   {
     path: "/order-detail",
     element: <OrderDetail />,
+  },
+  {
+    path: "/admin",
+    element: <Admin />,
+  },
+  {
+    path: "/test-redux",
+    element: <TestRedux />,
   },
 ]);
 

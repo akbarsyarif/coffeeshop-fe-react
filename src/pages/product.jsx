@@ -1,9 +1,11 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import getImageUrl from "../utils/imageGetter";
+import ProductCards from "../components/ProductCard";
 import Header from "../components/HeaderUser";
 import Footer from "../components/Footer";
 // import { useNavigate } from "react-router-dom"; gunakan ketika ada logika sebelum navigasi
 import { Link, useSearchParams } from "react-router-dom";
+import { axiosgetProduct } from "../https/product";
 
 const FilterRadio = ({ category, onChangeHandler }) => (
   <>
@@ -14,29 +16,164 @@ const FilterRadio = ({ category, onChangeHandler }) => (
   </>
 );
 
-function product() {
+function Product() {
   const [searchParams, setSearchParams] = useSearchParams();
-  console.log(searchParams.get("search"));
+  const [productData, setProductData] = useState(null);
   // const filterList = ["Favorite Product", "Coffee", "Non Coffee", "Foods", "Add-On"];
   // const sortList = [];
 
-  const searchHandler = (e) => {
-    e.preventDefault();
-    let category = "";
-    for (let i = 0; i < e.target.filter.length; i++) {
-      if (e.target.filter[i].checked) {
-        category = e.target.filter[i].id;
+  useEffect(() => {
+    async function fetchData() {
+      const url = import.meta.env.VITE_BE_HOST + "/product" + "?" + searchParams.toString();
+      try {
+        const result = await axiosgetProduct(url);
+        console.log(result);
+        setProductData(result.data.result);
+      } catch (error) {
+        console.log(error);
       }
     }
+    fetchData();
+  }, []);
 
-    setSearchParams((prev) => ({
-      ...prev,
-      search: e.target["search-bar"].value,
-      category: category,
-    }));
-    console.log(e.target.filter);
-    console.log(e.target["search-bar"]);
+  const searchHandler = async (e) => {
+    e.preventDefault();
+    const url = import.meta.env.VITE_BE_HOST + "/product" + "?" + searchParams.toString();
+
+    try {
+      const result = await axiosgetProduct(url);
+      console.log(result);
+      setProductData(result.data.result);
+    } catch (error) {
+      console.log(error);
+      setProductData();
+    }
+    // let category = "";
+    // for (let i = 0; i < e.target.filter.length; i++) {
+    //   if (e.target.filter[i].checked) {
+    //     category = e.target.filter[i].id;
+    //   }
+    // }
   };
+
+  const resetFilter = async () => {
+    const url = import.meta.env.VITE_BE_HOST + "/product";
+    setSearchParams((prev) => {
+      delete prev.search;
+      delete prev.category;
+    });
+    try {
+      const result = await axiosgetProduct(url);
+      setProductData(result.data.result);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const searchChange = (e) => {
+    setSearchParams((prev) => {
+      const prevSearchParams = {};
+      prev.forEach((value, key) => {
+        Object.assign(prevSearchParams, { [key]: value });
+      });
+      return {
+        ...prevSearchParams,
+        search: e.target.value,
+      };
+    });
+  };
+
+  const categoryChange = (e) => {
+    setSearchParams((prev) => {
+      const prevSearchParams = {};
+      prev.forEach((value, key) => {
+        Object.assign(prevSearchParams, { [key]: value });
+      });
+      return {
+        ...prevSearchParams,
+        category: e.target.value,
+      };
+    });
+    console.log(e.target);
+  };
+
+  const sortName = (e) => {
+    setSearchParams((prev) => {
+      const prevSearchParams = {};
+      prev.forEach((value, key) => {
+        Object.assign(prevSearchParams, { [key]: value });
+      });
+      return {
+        ...prevSearchParams,
+        product_name: e.target.value,
+      };
+    });
+  };
+  const sortPrice = (e) => {
+    setSearchParams((prev) => {
+      const prevSearchParams = {};
+      prev.forEach((value, key) => {
+        Object.assign(prevSearchParams, { [key]: value });
+      });
+      return {
+        ...prevSearchParams,
+        price: e.target.value,
+      };
+    });
+  };
+  const minSliderChange = (e) => {
+    let minRange = parseInt(e.target.value);
+    setSearchParams((prev) => {
+      const prevSearchParams = {};
+      prev.forEach((value, key) => {
+        Object.assign(prevSearchParams, { [key]: value });
+      });
+      return {
+        ...prevSearchParams,
+        min_price: minRange,
+      };
+    });
+    return minRange;
+  };
+  const maxSliderChange = (e) => {
+    let maxRange = parseInt(e.target.value);
+    setSearchParams((prev) => {
+      const prevSearchParams = {};
+      prev.forEach((value, key) => {
+        Object.assign(prevSearchParams, { [key]: value });
+      });
+      return {
+        ...prevSearchParams,
+        max_price: maxRange,
+      };
+    });
+    return maxRange;
+  };
+
+  const isCategory = (value) => {
+    const prevCategory = searchParams.get("category");
+    if (!prevCategory) return false;
+    return prevCategory.split(",").includes(value.toString());
+  };
+  const isSortName = (value) => {
+    const prevCategory = searchParams.get("product_name");
+    if (!prevCategory) return false;
+    return prevCategory.split(",").includes(value.toString());
+  };
+  const isSortPrice = (value) => {
+    const prevCategory = searchParams.get("price");
+    if (!prevCategory) return false;
+    return prevCategory.split(",").includes(value.toString());
+  };
+
+  //   setSearchParams((prev) => ({
+  //     ...prev,
+  //     search: e.target["search-bar"].value,
+  //     category: category,
+  //   }));
+  //   console.log(e.target.filter);
+  //   console.log(e.target["search-bar"]);
+  // };
 
   // const filterHandler = (e) => {
   //   setFilterParams((prev) => ({
@@ -118,98 +255,75 @@ function product() {
             <section className="product-filter hidden w-[240px] xl:w-[383px] h-min text-white text-lg lg:flex flex-col gap-[16px] bg-[#0b0909] rounded-[15px] px-[20px] pt-[27px] xl:pr-[38px] pb-[42px] xl:pl-[30px]">
               <section className="filter flex justify-between items-center">
                 <p className="text-[22px] font-semibold">Filter</p>
-                <p className="reset-filter font-bold">Reset Filter</p>
+                <p className="reset-filter font-bold cursor-pointer select-none hover:bg-slate-800 rounded-md p-2" onClick={resetFilter}>
+                  Reset Filter
+                </p>
               </section>
               <form className="flex flex-col gap-[16px]" onSubmit={searchHandler}>
                 <label htmlFor="search-bar" className="filter-head font-bold">
                   Search
                 </label>
                 <input
+                  onChange={searchChange}
+                  defaultValue={searchParams.get("search")}
                   type="text"
                   id="search-bar"
                   placeholder="Search Your Product"
                   className="search-bar w-[100%] mt-[-6px] pt-[22px] pr-[55px] pb-[25px] pl-[20px] border border-[#dedede] bg-[#fcfdfe] rounded-md text-[#696f79] text-sm font-normal tracking-[.75px]"
                 />
                 <p className="filter-head font-bold">Category</p>
-                {/* {filterList.map(
-                  (category,
-                  (idx) => {
-                    return <FilterRadio key={idx} category={category} onChangeHandler={filterHandler}></FilterRadio>;
-                  })
-                )} */}
-                <input type="radio" name="filter" id="favorite-product" className="hidden" />
+                <input onChange={categoryChange} checked={isCategory("Favorite Product")} defaultValue={"Favorite Product"} type="radio" name="filter" id="favorite-product" className="hidden" />
                 <label htmlFor="favorite-product" className="filter-button cursor-pointer">
                   Favorite Product
                 </label>
-                <input type="radio" name="filter" id="coffee" className="hidden" />
+                <input onChange={categoryChange} checked={isCategory("Coffee")} defaultValue={"Coffee"} type="radio" name="filter" id="coffee" className="hidden" />
                 <label htmlFor="coffee" className="filter-button cursor-pointer">
                   Coffee
                 </label>
-                <input type="radio" name="filter" id="non-coffee" className="hidden" />
+                <input onChange={categoryChange} checked={isCategory("Non Coffee")} defaultValue={"Non Coffee"} type="radio" name="filter" id="non-coffee" className="hidden" />
                 <label htmlFor="non-coffee" className="filter-button cursor-pointer">
                   Non Coffee
                 </label>
-                <input type="radio" name="filter" id="foods" className="hidden" />
+                <input onChange={categoryChange} checked={isCategory("Foods")} defaultValue={"Foods"} type="radio" name="filter" id="foods" className="hidden" />
                 <label htmlFor="foods" className="filter-button cursor-pointer">
                   Foods
                 </label>
-                <input type="radio" name="filter" id="add-on" className="hidden" />
+                <input onChange={categoryChange} checked={isCategory("Add-On")} defaultValue={"Add-On"} type="radio" name="filter" id="add-on" className="hidden" />
                 <label htmlFor="add-on" className="filter-button cursor-pointer">
                   Add-On
                 </label>
-                {/* <section className="checkbox flex gap-[15px]">
-                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                  <p className="filter-list">Favorite Product</p>
-                </section>
-                <section className="checkbox flex gap-[15px]">
-                  <div className="checked w-[24px] h-[24px] bg-color-1 bg-[url(./assets/images/u_check.svg)] rounded-md"></div>
-                  <p className="filter-list">Coffee</p>
-                </section>
-                <section className="checkbox flex gap-[15px]">
-                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                  <p className="filter-list">Non Coffee</p>
-                </section>
-                <section className="checkbox flex gap-[15px]">
-                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                  <p className="filter-list">Foods</p>
-                </section>
-                <section className="checkbox flex gap-[15px]">
-                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                  <p className="filter-list">Add-On</p>
-                </section> */}
-                {/* <!--  --> */}
                 <p className="filter-head font-bold">Sort By</p>
-                <section className="checkbox flex gap-[15px]">
-                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                  <p className="filter-list">Buy 1 get 1</p>
-                </section>
-                <section className="checkbox flex gap-[15px]">
-                  <div className="checked w-[24px] h-[24px] bg-color-1 bg-[url(./assets/images/u_check.svg)] rounded-md"></div>
-                  <p className="filter-list">Flash Sale</p>
-                </section>
-                <section className="checkbox flex gap-[15px]">
-                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                  <p className="filter-list">Birthday Package</p>
-                </section>
-                <section className="checkbox flex gap-[15px]">
-                  <div className="no-check w-[24px] h-[24px] border border-[#a0a3bd] rounded-md"></div>
-                  <p className="filter-list">Cheap</p>
-                </section>
+                <p className="filter-head font-medium text-sm my-[-10px]">Product Name</p>
+                <input onChange={sortName} checked={isSortName("asc")} defaultValue={"asc"} type="radio" name="sort-name" id="name-asc" className="hidden" />
+                <label htmlFor="name-asc" className="filter-button cursor-pointer">
+                  A - z
+                </label>
+                <input onChange={sortName} checked={isSortName("desc")} defaultValue={"desc"} type="radio" name="sort-name" id="name-desc" className="hidden" />
+                <label htmlFor="name-desc" className="filter-button cursor-pointer">
+                  Z - a
+                </label>
+                <p className="filter-head font-medium text-sm mb-[-10px]">Product Price</p>
+                <input onChange={sortPrice} checked={isSortPrice("asc")} defaultValue={"asc"} type="radio" name="sort-price" id="price-asc" className="hidden" />
+                <label htmlFor="price-asc" className="filter-button cursor-pointer">
+                  From Cheapest
+                </label>
+                <input onChange={sortPrice} checked={isSortPrice("desc")} defaultValue={"desc"} type="radio" name="sort-price" id="price-desc" className="hidden" />
+                <label htmlFor="price-desc" className="filter-button cursor-pointer">
+                  From Priciest
+                </label>
                 <p className="filter-head font-bold">Range Price</p>
                 <section className="range">
                   <div className="range-slider h-[8px] relative bg-[#f5f6f8] rounded-[25px]">
-                    <span className="range-selected h-[100%] absolute left-[20%] right-[30%] rounded-[25px] bg-color-1"></span>
+                    <span className={`range-selected h-[100%] absolute left-[0%] right-[0%] rounded-[25px] bg-color-1`}></span>
                   </div>
                   <section className="slider relative">
-                    <input className="min absolute w-[100%] h-[5px] top-[-7px] bg-none appearance-none pointer-events-none" min="330" max="580" type="range" defaultValue="374" />
-                    <input className="max absolute w-[100%] h-[5px] top-[-7px] bg-none appearance-none pointer-events-none" min="330" max="580" type="range" defaultValue="500" />
+                    <input id="min" onChange={minSliderChange} className="min absolute w-[100%] h-[5px] top-[-7px] bg-none appearance-none pointer-events-none" min="10000" max="100000" step={"1000"} type="range" defaultValue="10000" />
+                    <input id="max" onChange={maxSliderChange} className="max absolute w-[100%] h-[5px] top-[-7px] bg-none appearance-none pointer-events-none" min="10000" max="100000" step={"1000"} type="range" defaultValue="100000" />
                   </section>
-                  <div className="range-price flex justify-evenly mt-[8px] text-xs leading-[24px]">
+                  <div className="range-price flex justify-between mt-[8px] text-xs leading-[24px]">
+                    <p>{`IDR. ${searchParams.get("min_price") ? searchParams.get("min_price") : 10000}`}</p>
                     <p>
-                      Idr.<span className="min">374</span>
-                    </p>
-                    <p>
-                      Idr.<span className="max">500</span>
+                      <p>{`IDR. ${searchParams.get("max_price") ? searchParams.get("max_price") : 100000}`}</p>
                     </p>
                   </div>
                 </section>
@@ -218,169 +332,9 @@ function product() {
                 </button>
               </form>
             </section>
-            <section className="product-list grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 items-center gap-[20px]">
-              <section className="product-info">
-                <section className="product-img-1 relative w-[350px] xl:w-[377px] h-[360px] bg-[url(./assets/images/product-3.webp)] bg-cover z-[-1]">
-                  <p className="flash-sale absolute top-[15px] left-[15px] font-bold p-[10px] bg-[#d00000] text-white rounded-[25px] w-fit">FLASH SALE!</p>
-                </section>
-                <section className="product-text mt-[-50px] mx-auto p-[10px] bg-white w-[320px] xl:w-[345px]">
-                  <p className="product-name mb-[12px] text-color-2 text-[22px] font-medium">Hazelnut Latte</p>
-                  <p className="mb-[12px] text-[color-2] text-sm">You can explore the menu that we provide with fun and have their own taste and make your day better.</p>
-                  <section className="star-cont mb-[12px] text-sm flex gap-[10px] text-[#4f5665]">
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <p className="star">5.0</p>
-                  </section>
-                  <section className="price flex gap-[12px] items-center mb-[12px] text-color-1 text-[22px] font-medium">
-                    <p className="price-slash text-[#d00000] line-through text-xs">IDR 20.000</p>
-                    <p className="price-actual">IDR 10.000</p>
-                  </section>
-                  <section className="button-cont flex items-center gap-[10px]">
-                    <button className="buy cursor-pointer hover:bg-color-1-hover w-[80%] h-[35px] bg-color-1 rounded-[5px] text-color-2 text-sm font-medium">Buy</button>
-                    <img src={getImageUrl("ShoppingCart", "svg")} alt="shopping-cart" className="cart cursor-pointer hover:bg-[#e8e8e8] w-[58px] h-[35px] border border-color-1 rounded-[5px]" />
-                  </section>
-                </section>
-              </section>
-              {/* <!--  --> */}
-              <section className="product-info">
-                <section className="product-img-2 relative w-[350px] xl:w-[377px] h-[360px] bg-[url(./assets/images/product-4.webp)] bg-cover z-[-1]">
-                  <p className="flash-sale absolute top-[15px] left-[15px] font-bold p-[10px] bg-[#d00000] text-white rounded-[25px] w-fit">FLASH SALE!</p>
-                </section>
-                <section className="product-text mt-[-50px] mx-auto p-[10px] bg-white w-[320px] xl:w-[345px]">
-                  <p className="product-name mb-[12px] text-color-2 text-[22px] font-medium">Hazelnut Latte</p>
-                  <p className="mb-[12px] text-[color-2] text-sm">You can explore the menu that we provide with fun and have their own taste and make your day better.</p>
-                  <section className="star-cont mb-[12px] text-sm flex gap-[10px] text-[#4f5665]">
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <p className="star">5.0</p>
-                  </section>
-                  <section className="price flex gap-[12px] items-center mb-[12px] text-color-1 text-[22px] font-medium">
-                    <p className="price-slash text-[#d00000] line-through text-xs">IDR 20.000</p>
-                    <p className="price-actual">IDR 10.000</p>
-                  </section>
-                  <section className="button-cont flex items-center gap-[10px]">
-                    <button className="buy cursor-pointer hover:bg-color-1-hover w-[80%] h-[35px] bg-color-1 rounded-[5px] text-color-2 text-sm font-medium">Buy</button>
-                    <img src={getImageUrl("ShoppingCart", "svg")} alt="shopping-cart" className="cart cursor-pointer hover:bg-[#e8e8e8] w-[58px] h-[35px] border border-color-1 rounded-[5px]" />
-                  </section>
-                </section>
-              </section>
-              {/* <!--  --> */}
-              <section className="product-info">
-                <section className="product-img-1 relative w-[350px] xl:w-[377px] h-[360px] bg-[url(./assets/images/product-3.webp)] bg-cover z-[-1]">
-                  <p className="flash-sale absolute top-[15px] left-[15px] font-bold p-[10px] bg-[#d00000] text-white rounded-[25px] w-fit">FLASH SALE!</p>
-                </section>
-                <section className="product-text mt-[-50px] mx-auto p-[10px] bg-white w-[320px] xl:w-[345px]">
-                  <p className="product-name mb-[12px] text-color-2 text-[22px] font-medium">Hazelnut Latte</p>
-                  <p className="mb-[12px] text-[color-2] text-sm">You can explore the menu that we provide with fun and have their own taste and make your day better.</p>
-                  <section className="star-cont mb-[12px] text-sm flex gap-[10px] text-[#4f5665]">
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <p className="star">5.0</p>
-                  </section>
-                  <section className="price flex gap-[12px] items-center mb-[12px] text-color-1 text-[22px] font-medium">
-                    <p className="price-slash text-[#d00000] line-through text-xs">IDR 20.000</p>
-                    <p className="price-actual">IDR 10.000</p>
-                  </section>
-                  <section className="button-cont flex items-center gap-[10px]">
-                    <button className="buy cursor-pointer hover:bg-color-1-hover w-[80%] h-[35px] bg-color-1 rounded-[5px] text-color-2 text-sm font-medium">Buy</button>
-                    <img src={getImageUrl("ShoppingCart", "svg")} alt="shopping-cart" className="cart cursor-pointer hover:bg-[#e8e8e8] w-[58px] h-[35px] border border-color-1 rounded-[5px]" />
-                  </section>
-                </section>
-              </section>
-              {/* <!--  --> */}
-              <section className="product-info">
-                <section className="product-img-2 relative w-[350px] xl:w-[377px] h-[360px] bg-[url(./assets/images/product-4.webp)] bg-cover z-[-1]">
-                  <p className="flash-sale absolute top-[15px] left-[15px] font-bold p-[10px] bg-[#d00000] text-white rounded-[25px] w-fit">FLASH SALE!</p>
-                </section>
-                <section className="product-text mt-[-50px] mx-auto p-[10px] bg-white w-[320px] xl:w-[345px]">
-                  <p className="product-name mb-[12px] text-color-2 text-[22px] font-medium">Hazelnut Latte</p>
-                  <p className="mb-[12px] text-[color-2] text-sm">You can explore the menu that we provide with fun and have their own taste and make your day better.</p>
-                  <section className="star-cont mb-[12px] text-sm flex gap-[10px] text-[#4f5665]">
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <p className="star">5.0</p>
-                  </section>
-                  <section className="price flex gap-[12px] items-center mb-[12px] text-color-1 text-[22px] font-medium">
-                    <p className="price-slash text-[#d00000] line-through text-xs">IDR 20.000</p>
-                    <p className="price-actual">IDR 10.000</p>
-                  </section>
-                  <section className="button-cont flex items-center gap-[10px]">
-                    <button className="buy cursor-pointer hover:bg-color-1-hover w-[80%] h-[35px] bg-color-1 rounded-[5px] text-color-2 text-sm font-medium">Buy</button>
-                    <img src={getImageUrl("ShoppingCart", "svg")} alt="shopping-cart" className="cart cursor-pointer hover:bg-[#e8e8e8] w-[58px] h-[35px] border border-color-1 rounded-[5px]" />
-                  </section>
-                </section>
-              </section>
-              {/* <!--  --> */}
-              <section className="product-info">
-                <section className="product-img-1 relative w-[350px] xl:w-[377px] h-[360px] bg-[url(./assets/images/product-3.webp)] bg-cover z-[-1]">
-                  <p className="flash-sale absolute top-[15px] left-[15px] font-bold p-[10px] bg-[#d00000] text-white rounded-[25px] w-fit">FLASH SALE!</p>
-                </section>
-                <section className="product-text mt-[-50px] mx-auto p-[10px] bg-white w-[320px] xl:w-[345px]">
-                  <p className="product-name mb-[12px] text-color-2 text-[22px] font-medium">Hazelnut Latte</p>
-                  <p className="mb-[12px] text-[color-2] text-sm">You can explore the menu that we provide with fun and have their own taste and make your day better.</p>
-                  <section className="star-cont mb-[12px] text-sm flex gap-[10px] text-[#4f5665]">
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <p className="star">5.0</p>
-                  </section>
-                  <section className="price flex gap-[12px] items-center mb-[12px] text-color-1 text-[22px] font-medium">
-                    <p className="price-slash text-[#d00000] line-through text-xs">IDR 20.000</p>
-                    <p className="price-actual">IDR 10.000</p>
-                  </section>
-                  <section className="button-cont flex items-center gap-[10px]">
-                    <button className="buy cursor-pointer hover:bg-color-1-hover w-[80%] h-[35px] bg-color-1 rounded-[5px] text-color-2 text-sm font-medium">Buy</button>
-                    <img src={getImageUrl("ShoppingCart", "svg")} alt="shopping-cart" className="cart cursor-pointer hover:bg-[#e8e8e8] w-[58px] h-[35px] border border-color-1 rounded-[5px]" />
-                  </section>
-                </section>
-              </section>
-              {/* <!--  --> */}
-              <section className="product-info">
-                <section className="product-img-2 relative w-[350px] xl:w-[377px] h-[360px] bg-[url(./assets/images/product-4.webp)] bg-cover z-[-1]">
-                  <p className="flash-sale absolute top-[15px] left-[15px] font-bold p-[10px] bg-[#d00000] text-white rounded-[25px] w-fit">FLASH SALE!</p>
-                </section>
-                <section className="product-text mt-[-50px] mx-auto p-[10px] bg-white w-[320px] xl:w-[345px]">
-                  <p className="product-name mb-[12px] text-color-2 text-[22px] font-medium">Hazelnut Latte</p>
-                  <p className="mb-[12px] text-[color-2] text-sm">You can explore the menu that we provide with fun and have their own taste and make your day better.</p>
-                  <section className="star-cont mb-[12px] text-sm flex gap-[10px] text-[#4f5665]">
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <img src={getImageUrl("star-orange", "svg")} alt="star-orange" />
-                    <p className="star">5.0</p>
-                  </section>
-                  <section className="price flex gap-[12px] items-center mb-[12px] text-color-1 text-[22px] font-medium">
-                    <p className="price-slash text-[#d00000] line-through text-xs">IDR 20.000</p>
-                    <p className="price-actual">IDR 10.000</p>
-                  </section>
-                  <section className="button-cont flex items-center gap-[10px]">
-                    <button className="buy cursor-pointer hover:bg-color-1-hover w-[80%] h-[35px] bg-color-1 rounded-[5px] text-color-2 text-sm font-medium">Buy</button>
-                    <img src={getImageUrl("ShoppingCart", "svg")} alt="shopping-cart" className="cart cursor-pointer hover:bg-[#e8e8e8] w-[58px] h-[35px] border border-color-1 rounded-[5px]" />
-                  </section>
-                </section>
-              </section>
-              <section className="product-pages mt-[5px] md:col-span-2 2xl:col-span-3 flex gap-[20px] justify-center items-center text-[#a0a3bd] font-medium">
-                <p className="active cursor-pointer w-[40px] h-[40px] bg-color-1 hover:bg-color-1-hover rounded-full text-[#0b0909] text-center leading-[39px]">1</p>
-                <p className="cursor-pointer w-[40px] h-[40px] bg-[#e8e8e8] hover:bg-[#d2d2d2] rounded-full text-[#0b0909] text-center leading-[39px]">2</p>
-                <p className="cursor-pointer w-[40px] h-[40px] bg-[#e8e8e8] hover:bg-[#d2d2d2] rounded-full text-[#0b0909] text-center leading-[39px]">3</p>
-                <p className="cursor-pointer w-[40px] h-[40px] bg-[#e8e8e8] hover:bg-[#d2d2d2] rounded-full text-[#0b0909] text-center leading-[39px]">4</p>
-                <div className="next cursor-pointer w-[40px] h-[40px] bg-color-1 hover:bg-color-1-hover rounded-full bg-[url(./assets/images/arrow-right-white.svg)] bg-no-repeat bg-center"></div>
-              </section>
+            {/*  */}
+            <section className="product-list grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-[20px]">
+              {productData ? productData.map((product, idx) => <ProductCards key={idx} info={product}></ProductCards>) : <p className="col-span-2  w-full text-2xl text-center"> No Product Found...</p>}
             </section>
           </section>
         </section>
@@ -390,4 +344,4 @@ function product() {
   );
 }
 
-export default product;
+export default Product;
